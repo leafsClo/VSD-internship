@@ -149,6 +149,8 @@ riscv64-unknown-linux-gnu-objdump -d sum1ton.o | less
 
 ## Task 2: Spike Simulation of the compiled C code
 
+> This task is split into two parts. **Part A** uses the `sum1ton` program from Task 1. **Part B** introduces a new Fibonacci series program and repeats the same compilation and simulation workflow.
+
 **Objective:** Simulate the C code compiled using RISC-V GNU Toolchain using Spike, a RISC-V simulator, and observe the output. Along with that, also use debug tools in spike. 
 
 ---
@@ -258,6 +260,97 @@ In the image, we can see that I ran the Program counter from 0 to 10340. Then ch
 
 ---
 
+## Task 2 — Part B: Fibonacci Series
+
+**Objective:** Repeat the Spike simulation workflow with a new C program that generates the Fibonacci series. Observe that both GCC (host) and the RISC-V toolchain produce identical output, and use the Spike debugger to step through the compiled binary.
+
+---
+
+### Step 1 — Write the C Program
+
+Create a file `fibonacci.c`:
+
+```c
+#include <stdio.h>
+
+int main() {
+
+    int n = 10, first = 0, second = 1, next;
+
+    printf("Fibonacci Series: ");
+
+    for (int i = 0; i < n; i++)
+    {
+        if (i <= 1)
+            next = i;
+        else
+        {
+            next = first + second;
+            first = second;
+            second = next;
+        }
+
+        printf("%d ", next);
+    }
+    printf("\n");
+}
+```
+
+---
+
+### Step 2 — Compile and Run (GCC & RISC-V Toolchain)
+
+**Using GCC:**
+
+```bash
+gcc fibonacci.c
+./a.out
+```
+
+**Expected output:**
+```
+Fibonacci Series: 0 1 1 2 3 5 8 13 21 34
+```
+
+**Using RISC-V GNU Toolchain:**
+
+```bash
+riscv64-unknown-linux-gnu-gcc -march=rv64g -mabi=lp64d -static -o fibonacci.o fibonacci.c
+spike $(which pk) fibonacci.o
+```
+
+Observe that the outputs are identical for both GCC and the RISC-V toolchain.
+
+![Compilation using GCC and RISC-V toolchain](images/task2/d.png)
+
+---
+
+### Step 3 — Inspect the Object Dump
+
+Generate the disassembly of the compiled RISC-V binary:
+
+```bash
+riscv64-unknown-linux-gnu-objdump -d fibonacci.o | less
+```
+
+![Object dump of fibonacci.o](images/task2/e.png)
+
+---
+
+### Step 4 — Debug with Spike
+
+Use the Spike debugger to step through the Fibonacci binary:
+
+```bash
+spike -d $(which pk) fibonacci.o
+```
+
+Locate the `main` function address from the object dump, then run the program counter up to that address and step through the registers to observe how the Fibonacci computation evolves.
+
+![Spike debugger session for fibonacci.o](images/task2/f.png)
+
+---
+
 ## Repository Structure
 
 ```
@@ -270,9 +363,12 @@ VSD-internship/
 │   │   ├── d.png       # RISC-V -Ofast disassembly (part 1)
 │   │   └── e.png       # RISC-V -Ofast disassembly (part 2)
 │   └── task2/          # Screenshots for Task 2
-│       ├── a.png       # GCC and RISC-V toolchain compilation output
-│       ├── b.png       # Object dump of sum1ton.o
-│       └── c.png       # Spike debugger session
+│       ├── a.png       # GCC and RISC-V toolchain compilation output (Part A)
+│       ├── b.png       # Object dump of sum1ton.o (Part A)
+│       ├── c.png       # Spike debugger session (Part A)
+│       ├── d.png       # GCC and RISC-V toolchain compilation output (Part B)
+│       ├── e.png       # Object dump of fibonacci.o (Part B)
+│       └── f.png       # Spike debugger session for fibonacci.o (Part B)
 └── README.md
 ```
 
